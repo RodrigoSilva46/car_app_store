@@ -42,10 +42,10 @@ def listar_carros():
     st.header("Carros em Estoque")
     if len(carros) > 0:
         st.write("Aqui estão os carros em estoque:")
-        st.table(carros)
+        colunas = ["ID", "Modelo", "Marca", "Ano", "Cor", "Tipo", "Preço (R$)", "Reservado"]
+        st.write(colunas)
         for carro in carros:
-            if st.checkbox(f"Reservado: {carro[7]}"):
-                st.write("O carro está reservado")
+            st.write(carro)
     else:
         st.write("Não há carros em estoque.")
 
@@ -78,3 +78,4 @@ criar_tabela()
 # Chamando a função principal para executar o aplicativo
 if __name__ == "__main__":
     home()
+
