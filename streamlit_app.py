@@ -14,20 +14,20 @@ def criar_tabela():
         cor TEXT,
         tipo TEXT,
         preco REAL,
-        documentos TEXT
+        reservado INTEGER
     )
     """)
     conn.commit()
     conn.close()
 
 # Função para adicionar um novo veículo
-def adicionar_veiculo(modelo, marca, ano, cor, tipo, preco, documentos):
+def adicionar_veiculo(modelo, marca, ano, cor, tipo, preco, reservado):
     conn = sqlite3.connect("veiculos.db")
     cursor = conn.cursor()
     cursor.execute("""
-    INSERT INTO veiculos (modelo, marca, ano, cor, tipo, preco, documentos)
+    INSERT INTO veiculos (modelo, marca, ano, cor, tipo, preco, reservado)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (modelo, marca, ano, cor, tipo, preco, documentos))
+    """, (modelo, marca, ano, cor, tipo, preco, reservado))
     conn.commit()
     conn.close()
 
@@ -39,15 +39,21 @@ def listar_carros():
     carros = cursor.fetchall()
     conn.close()
 
-    st.header("Lista de Carros em Estoque")
-    for carro in carros:
-        st.write(carro)
+    st.header("Carros em Estoque")
+    if len(carros) > 0:
+        st.write("Aqui estão os carros em estoque:")
+        st.table(carros)
+        for carro in carros:
+            if st.checkbox(f"Reservado: {carro[7]}"):
+                st.write("O carro está reservado")
+    else:
+        st.write("Não há carros em estoque.")
 
 # Função para a página inicial do aplicativo
 def home():
     st.title("Bem-vindo, Carolina!")
     st.sidebar.title("Opções")
-    opcao = st.sidebar.radio("Escolha uma opção:", ["Adicionar Novo Veículo", "Listar Carros em Estoque"])
+    opcao = st.sidebar.radio("Escolha uma opção:", ["Adicionar Novo Veículo", "Carros em Estoque"])
 
     if opcao == "Adicionar Novo Veículo":
         st.header("Adicionar Novo Veículo")
@@ -57,13 +63,13 @@ def home():
         cor = st.text_input("Cor")
         tipo = st.selectbox("Tipo", ["SUV", "Hatch", "Sedan"])
         preco = st.number_input("Preço (R$)", min_value=0.0, step=1.0)
-        documentos = st.text_area("Status da Documentação", "Documentação em ordem")
+        reservado = st.checkbox("Reservado")
 
         if st.button("Adicionar"):
-            adicionar_veiculo(modelo, marca, ano, cor, tipo, preco, documentos)
+            adicionar_veiculo(modelo, marca, ano, cor, tipo, preco, reservado)
             st.success("Veículo adicionado com sucesso!")
 
-    elif opcao == "Listar Carros em Estoque":
+    elif opcao == "Carros em Estoque":
         listar_carros()
 
 # Chamando a função para criar a tabela de veículos
