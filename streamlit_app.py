@@ -43,6 +43,13 @@ def listar_carros():
     st.header("Carros em Estoque")
     if len(carros) > 0:
         df = pd.DataFrame(carros, columns=["ID", "Modelo", "Marca", "Ano", "Cor", "Tipo", "Preço (R$)", "Reservado"])
+        selected_rows = st.checkbox("Selecione os veículos para alterar ou remover")
+        if selected_rows:
+            selected_indices = st.multiselect("Selecione os veículos:", df.index)
+            if st.button("Remover"):
+                df.drop(selected_indices, inplace=True)
+            elif st.button("Alterar Preço"):
+                st.write("Aqui você pode alterar o preço dos veículos selecionados.")
         st.dataframe(df)
     else:
         st.write("Não há carros em estoque.")
