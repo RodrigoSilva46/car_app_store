@@ -57,4 +57,43 @@ def main():
         if st.button("Adicionar Carro"):
             if not marca or not modelo or not ano:
                 st.error("Todos os campos são obrigatórios.")
-            elif not ano.isdigit
+            elif not ano.isdigit():
+                st.error("O ano deve ser um número.")
+            else:
+                carro = Carro(marca, modelo, ano, imagem_url)
+                loja.adicionar_carro(carro)
+                st.success(f'{carro} foi adicionado.')
+
+    elif escolha == "Listar todos os carros":
+        st.subheader("Todos os carros na loja")
+        carros = loja.listar_carros()
+        if isinstance(carros, str):
+            st.text(carros)
+        else:
+            for carro in carros:
+                st.text(carro)
+                if carro.imagem_url:
+                    st.image(carro.imagem_url)
+
+    elif escolha == "Buscar carros por modelo":
+        st.subheader("Buscar carros por modelo")
+        modelo = st.text_input("Digite o modelo do carro para buscar")
+        if st.button("Buscar"):
+            carros = loja.encontrar_carros_por_modelo(modelo)
+            if not carros:
+                st.text(f'Nenhum carro encontrado com o modelo {modelo}.')
+            else:
+                for carro in carros:
+                    st.text(carro)
+                    if carro.imagem_url:
+                        st.image(carro.imagem_url)
+
+    elif escolha == "Remover um carro":
+        st.subheader("Remover um carro")
+        modelo = st.text_input("Digite o modelo do carro para remover")
+        if st.button("Remover"):
+            resultado = loja.remover_carro(modelo)
+            st.success(resultado)
+
+if __name__ == "__main__":
+    main()
