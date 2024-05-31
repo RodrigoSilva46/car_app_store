@@ -32,6 +32,24 @@ def adicionar_veiculo(modelo, marca, ano, cor, tipo, preco, reservado):
     conn.commit()
     conn.close()
 
+# Função para remover veículos
+def remover_veiculos(indices):
+    conn = sqlite3.connect("veiculos.db")
+    cursor = conn.cursor()
+    for idx in indices:
+        cursor.execute("DELETE FROM veiculos WHERE id=?", (idx,))
+    conn.commit()
+    conn.close()
+
+# Função para alterar o preço dos veículos
+def alterar_preco(indices, novo_preco):
+    conn = sqlite3.connect("veiculos.db")
+    cursor = conn.cursor()
+    for idx in indices:
+        cursor.execute("UPDATE veiculos SET preco=? WHERE id=?", (novo_preco, idx))
+    conn.commit()
+    conn.close()
+
 # Função para listar os carros em estoque
 def listar_carros():
     conn = sqlite3.connect("veiculos.db")
@@ -45,11 +63,14 @@ def listar_carros():
         df = pd.DataFrame(carros, columns=["ID", "Modelo", "Marca", "Ano", "Cor", "Tipo", "Preço (R$)", "Reservado"])
         selected_rows = st.checkbox("Selecione os veículos para alterar ou remover")
         if selected_rows:
-            selected_indices = st.multiselect("Selecione os veículos:", df.index)
+            selected_indices = st.multiselect("Selecione os veículos:", df["ID"])
             if st.button("Remover"):
-                df.drop(selected_indices, inplace=True)
-            elif st.button("Alterar Preço"):
-                st.write("Aqui você pode alterar o preço dos veículos selecionados.")
+                remover_veiculos(selected_indices)
+                st.success("Veículo(s) removido(s) com sucesso!")
+            novo_preco = st.number_input("Novo Preço (R$)")
+            if st.button("Alterar Preço"):
+                alterar_preco(selected_indices, novo_preco)
+                st.success("Preço do(s) veículo(s) alterado(s) com sucesso!")
         st.dataframe(df)
     else:
         st.write("Não há carros em estoque.")
