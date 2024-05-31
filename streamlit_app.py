@@ -1,86 +1,98 @@
-# streamlit_app.py
-
 import streamlit as st
 
-class Car:
-    def __init__(self, brand, model, year):
-        self.brand = brand
-        self.model = model
-        self.year = year
+class Carro:
+    def __init__(self, marca, modelo, ano, imagem_url=None):
+        self.marca = marca
+        self.modelo = modelo
+        self.ano = ano
+        self.imagem_url = imagem_url
 
     def __str__(self):
-        return f'{self.year} {self.brand} {self.model}'
+        return f'{self.ano} {self.marca} {self.modelo}'
 
-class CarStore:
+class LojaDeCarros:
     def __init__(self):
-        self.cars = []
+        self.carros = []
 
-    def add_car(self, car):
-        self.cars.append(car)
+    def adicionar_carro(self, carro):
+        self.carros.append(carro)
 
-    def list_cars(self):
-        if not self.cars:
-            return "No cars in the store."
-        return '\n'.join([str(car) for car in self.cars])
+    def listar_carros(self):
+        if not self.carros:
+            return "Nenhum carro na loja."
+        return self.carros
 
-    def find_cars_by_model(self, model):
-        found_cars = [car for car in self.cars if car.model.lower() == model.lower()]
-        if not found_cars:
-            return f'No cars found with model {model}.'
-        return '\n'.join([str(car) for car in found_cars])
+    def encontrar_carros_por_modelo(self, modelo):
+        carros_encontrados = [carro for carro in self.carros if carro.modelo.lower() == modelo.lower()]
+        if not carros_encontrados:
+            return []
+        return carros_encontrados
 
-    def remove_car(self, model):
-        car_to_remove = None
-        for car in self.cars:
-            if car.model.lower() == model.lower():
-                car_to_remove = car
+    def remover_carro(self, modelo):
+        carro_para_remover = None
+        for carro in self.carros:
+            if carro.modelo.lower() == modelo.lower():
+                carro_para_remover = carro
                 break
-        if car_to_remove:
-            self.cars.remove(car_to_remove)
-            return f'{car_to_remove} has been removed.'
-        return f'No car found with model {model}.'
+        if carro_para_remover:
+            self.carros.remove(carro_para_remover)
+            return f'{carro_para_remover} foi removido.'
+        return f'Nenhum carro encontrado com o modelo {modelo}.'
 
 def main():
-    store = CarStore()
-    st.title("Car Store App")
+    loja = LojaDeCarros()
+    st.title("J Veículos")
 
-    menu = ["Add a new car", "List all cars", "Find cars by model", "Remove a car"]
-    choice = st.sidebar.selectbox("Menu", menu)
+    menu = ["Adicionar novo carro", "Listar todos os carros", "Buscar carros por modelo", "Remover um carro"]
+    escolha = st.sidebar.selectbox("Menu", menu)
 
-    if choice == "Add a new car":
-        st.subheader("Add a new car")
-        brand = st.text_input("Enter car brand")
-        model = st.text_input("Enter car model")
-        year = st.text_input("Enter car year")
+    if escolha == "Adicionar novo carro":
+        st.subheader("Adicionar novo carro")
+        marca = st.text_input("Digite a marca do carro")
+        modelo = st.text_input("Digite o modelo do carro")
+        ano = st.text_input("Digite o ano do carro")
+        imagem_url = st.text_input("Digite a URL da imagem do carro (opcional)")
 
-        if st.button("Add Car"):
-            if not brand or not model or not year:
-                st.error("All fields are required.")
-            elif not year.isdigit():
-                st.error("Year must be a number.")
+        if st.button("Adicionar Carro"):
+            if not marca or not modelo or not ano:
+                st.error("Todos os campos são obrigatórios.")
+            elif not ano.isdigit():
+                st.error("O ano deve ser um número.")
             else:
-                car = Car(brand, model, year)
-                store.add_car(car)
-                st.success(f'{car} has been added.')
+                carro = Carro(marca, modelo, ano, imagem_url)
+                loja.adicionar_carro(carro)
+                st.success(f'{carro} foi adicionado.')
 
-    elif choice == "List all cars":
-        st.subheader("All cars in the store")
-        cars = store.list_cars()
-        st.text(cars)
+    elif escolha == "Listar todos os carros":
+        st.subheader("Todos os carros na loja")
+        carros = loja.listar_carros()
+        if isinstance(carros, str):
+            st.text(carros)
+        else:
+            for carro in carros:
+                st.text(carro)
+                if carro.imagem_url:
+                    st.image(carro.imagem_url)
 
-    elif choice == "Find cars by model":
-        st.subheader("Find cars by model")
-        model = st.text_input("Enter car model to search")
-        if st.button("Search"):
-            cars = store.find_cars_by_model(model)
-            st.text(cars)
+    elif escolha == "Buscar carros por modelo":
+        st.subheader("Buscar carros por modelo")
+        modelo = st.text_input("Digite o modelo do carro para buscar")
+        if st.button("Buscar"):
+            carros = loja.encontrar_carros_por_modelo(modelo)
+            if not carros:
+                st.text(f'Nenhum carro encontrado com o modelo {modelo}.')
+            else:
+                for carro in carros:
+                    st.text(carro)
+                    if carro.imagem_url:
+                        st.image(carro.imagem_url)
 
-    elif choice == "Remove a car":
-        st.subheader("Remove a car")
-        model = st.text_input("Enter car model to remove")
-        if st.button("Remove"):
-            result = store.remove_car(model)
-            st.success(result)
+    elif escolha == "Remover um carro":
+        st.subheader("Remover um carro")
+        modelo = st.text_input("Digite o modelo do carro para remover")
+        if st.button("Remover"):
+            resultado = loja.remover_carro(modelo)
+            st.success(resultado)
 
 if __name__ == "__main__":
     main()
