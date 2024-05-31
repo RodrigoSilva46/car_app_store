@@ -1,114 +1,74 @@
 import streamlit as st
+import sqlite3
 
-class Carro:
-    def __init__(self, marca, modelo, ano, cor, imagem_url=None):
-        self.marca = marca
-        self.modelo = modelo
-        self.ano = ano
-        self.cor = cor
-        self.imagem_url = imagem_url
+# Função para criar a tabela de veículos
+def criar_tabela():
+    conn = sqlite3.connect("veiculos.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS veiculos (
+        id INTEGER PRIMARY KEY,
+        modelo TEXT,
+        marca TEXT,
+        ano INTEGER,
+        cor TEXT,
+        tipo TEXT,
+        preco REAL,
+        documentos TEXT
+    )
+    """)
+    conn.commit()
+    conn.close()
 
-    def __str__(self):
-        return f'{self.marca} {self.modelo} {self.ano} {self.cor}'
+# Função para adicionar um novo veículo
+def adicionar_veiculo(modelo, marca, ano, cor, tipo, preco, documentos):
+    conn = sqlite3.connect("veiculos.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+    INSERT INTO veiculos (modelo, marca, ano, cor, tipo, preco, documentos)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (modelo, marca, ano, cor, tipo, preco, documentos))
+    conn.commit()
+    conn.close()
 
-class LojaDeCarros:
-    def __init__(self):
-        if 'carros' not in st.session_state:
-            st.session_state['carros'] = []
+# Função para listar os carros em estoque
+def listar_carros():
+    conn = sqlite3.connect("veiculos.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM veiculos")
+    carros = cursor.fetchall()
+    conn.close()
 
-    def adicionar_carro(self, carro):
-        st.session_state['carros'].append(carro)
+    st.header("Lista de Carros em Estoque")
+    for carro in carros:
+        st.write(carro)
 
-    def listar_carros(self):
-        if not st.session_state['carros']:
-            return "Nenhum carro na loja."
-        return st.session_state['carros']
+# Função para a página inicial do aplicativo
+def home():
+    st.title("Bem-vindo, Carolina!")
+    st.sidebar.title("Opções")
+    opcao = st.sidebar.radio("Escolha uma opção:", ["Adicionar Novo Veículo", "Listar Carros em Estoque"])
 
-    def encontrar_carros_por_modelo(self, modelo):
-        carros_encontrados = [carro for carro in st.session_state['carros'] if carro.modelo.lower() == modelo.lower()]
-        if not carros_encontrados:
-            return []
-        return carros_encontrados
+    if opcao == "Adicionar Novo Veículo":
+        st.header("Adicionar Novo Veículo")
+        modelo = st.text_input("Modelo")
+        marca = st.text_input("Marca")
+        ano = st.number_input("Ano do Carro", min_value=1900, max_value=2024, step=1)
+        cor = st.text_input("Cor")
+        tipo = st.selectbox("Tipo", ["SUV", "Hatch", "Sedan"])
+        preco = st.number_input("Preço (R$)", min_value=0.0, step=1.0)
+        documentos = st.text_area("Status da Documentação", "Documentação em ordem")
 
-    def remover_carros(self, indices):
-        st.session_state['carros'] = [carro for i, carro in enumerate(st.session_state['carros']) if i not in indices]
-        return f'Carros removidos com sucesso.'
+        if st.button("Adicionar"):
+            adicionar_veiculo(modelo, marca, ano, cor, tipo, preco, documentos)
+            st.success("Veículo adicionado com sucesso!")
 
-def main():
-    loja = LojaDeCarros()
-    st.title("J Veículos")
+    elif opcao == "Listar Carros em Estoque":
+        listar_carros()
 
-    menu = ["Adicionar novo carro", "Listar todos os carros", "Buscar carros por modelo", "Remover carros"]
-    escolha = st.sidebar.selectbox("Menu", menu)
+# Chamando a função para criar a tabela de veículos
+criar_tabela()
 
-    if escolha == "Adicionar novo carro":
-        st.subheader("Adicionar novo carro")
-        marca = st.text_input("Digite a marca do carro")
-        modelo = st.text_input("Digite o modelo do carro")
-        ano = st.text_input("Digite o ano do carro")
-        cor = st.text_input("Digite a cor do carro")
-        imagem_url = st.text_input("Digite a URL da imagem do carro (opcional)")
-
-        if st.button("Adicionar Carro"):
-            if not marca or not modelo or not ano or not cor:
-                st.error("Todos os campos são obrigatórios.")
-            elif not ano.isdigit():
-                st.error("O ano deve ser um número.")
-            else:
-                carro = Carro(marca, modelo, ano, cor, imagem_url)
-                loja.adicionar_carro(carro)
-                st.success(f'{carro} foi adicionado.')
-
-    elif escolha == "Listar todos os carros":
-        st.subheader("Todos os carros na loja")
-        carros = loja.listar_carros()
-        if isinstance(carros, str):
-            st.text(carros)
-        else:
-            indices_para_remover = []
-            for i, carro in enumerate(carros):
-                if st.checkbox(f'{carro}', key=f'carro_{i}'):
-                    indices_para_remover.append(i)
-                if carro.imagem_url:
-                    st.image(carro.imagem_url)
-
-            if indices_para_remover:
-                if st.button("Remover carros selecionados"):
-                    loja.remover_carros(indices_para_remover)
-                    st.success("Carros removidos com sucesso.")
-                    st.experimental_rerun()
-
-    elif escolha == "Buscar carros por modelo":
-        st.subheader("Buscar carros por modelo")
-        modelo = st.text_input("Digite o modelo do carro para buscar")
-        if st.button("Buscar"):
-            carros = loja.encontrar_carros_por_modelo(modelo)
-            if not carros:
-                st.text(f'Nenhum carro encontrado com o modelo {modelo}.')
-            else:
-                for carro in carros:
-                    st.text(carro)
-                    if carro.imagem_url:
-                        st.image(carro.imagem_url)
-
-    elif escolha == "Remover carros":
-        st.subheader("Remover carros")
-        carros = loja.listar_carros()
-        if isinstance(carros, str):
-            st.text(carros)
-        else:
-            indices_para_remover = []
-            for i, carro in enumerate(carros):
-                if st.checkbox(f'{carro}', key=f'remover_{i}'):
-                    indices_para_remover.append(i)
-                if carro.imagem_url:
-                    st.image(carro.imagem_url)
-
-            if indices_para_remover:
-                if st.button("Remover carros selecionados"):
-                    loja.remover_carros(indices_para_remover)
-                    st.success("Carros removidos com sucesso.")
-                    st.experimental_rerun()
-
+# Chamando a função principal para executar o aplicativo
 if __name__ == "__main__":
-    main()
+    home()
