@@ -1,5 +1,6 @@
 import streamlit as st
 import sqlite3
+import pandas as pd
 
 # Função para criar a tabela de veículos
 def criar_tabela():
@@ -41,11 +42,8 @@ def listar_carros():
 
     st.header("Carros em Estoque")
     if len(carros) > 0:
-        st.write("Aqui estão os carros em estoque:")
-        colunas = ["ID", "Modelo", "Marca", "Ano", "Cor", "Tipo", "Preço (R$)", "Reservado"]
-        st.write(colunas)
-        for carro in carros:
-            st.write(carro)
+        df = pd.DataFrame(carros, columns=["ID", "Modelo", "Marca", "Ano", "Cor", "Tipo", "Preço (R$)", "Reservado"])
+        st.dataframe(df)
     else:
         st.write("Não há carros em estoque.")
 
