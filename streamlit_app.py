@@ -1,14 +1,15 @@
 import streamlit as st
 
 class Carro:
-    def __init__(self, marca, modelo, ano, imagem_url=None):
+    def __init__(self, marca, modelo, ano, cor, imagem_url=None):
         self.marca = marca
         self.modelo = modelo
         self.ano = ano
+        self.cor = cor
         self.imagem_url = imagem_url
 
     def __str__(self):
-        return f'{self.ano} {self.marca} {self.modelo}'
+        return f'{self.marca} {self.modelo} {self.ano} {self.cor}'
 
 class LojaDeCarros:
     def __init__(self):
@@ -29,22 +30,15 @@ class LojaDeCarros:
             return []
         return carros_encontrados
 
-    def remover_carro(self, modelo):
-        carro_para_remover = None
-        for carro in st.session_state['carros']:
-            if carro.modelo.lower() == modelo.lower():
-                carro_para_remover = carro
-                break
-        if carro_para_remover:
-            st.session_state['carros'].remove(carro_para_remover)
-            return f'{carro_para_remover} foi removido.'
-        return f'Nenhum carro encontrado com o modelo {modelo}.'
+    def remover_carros(self, indices):
+        st.session_state['carros'] = [carro for i, carro in enumerate(st.session_state['carros']) if i not in indices]
+        return f'Carros removidos com sucesso.'
 
 def main():
     loja = LojaDeCarros()
     st.title("J Veículos")
 
-    menu = ["Adicionar novo carro", "Listar todos os carros", "Buscar carros por modelo", "Remover um carro"]
+    menu = ["Adicionar novo carro", "Listar todos os carros", "Buscar carros por modelo", "Remover carros"]
     escolha = st.sidebar.selectbox("Menu", menu)
 
     if escolha == "Adicionar novo carro":
@@ -52,15 +46,16 @@ def main():
         marca = st.text_input("Digite a marca do carro")
         modelo = st.text_input("Digite o modelo do carro")
         ano = st.text_input("Digite o ano do carro")
+        cor = st.text_input("Digite a cor do carro")
         imagem_url = st.text_input("Digite a URL da imagem do carro (opcional)")
 
         if st.button("Adicionar Carro"):
-            if not marca or not modelo or not ano:
+            if not marca or not modelo or not ano or not cor:
                 st.error("Todos os campos são obrigatórios.")
             elif not ano.isdigit():
                 st.error("O ano deve ser um número.")
             else:
-                carro = Carro(marca, modelo, ano, imagem_url)
+                carro = Carro(marca, modelo, ano, cor, imagem_url)
                 loja.adicionar_carro(carro)
                 st.success(f'{carro} foi adicionado.')
 
@@ -70,10 +65,18 @@ def main():
         if isinstance(carros, str):
             st.text(carros)
         else:
-            for carro in carros:
-                st.text(carro)
+            indices_para_remover = []
+            for i, carro in enumerate(carros):
+                if st.checkbox(f'{carro}', key=f'carro_{i}'):
+                    indices_para_remover.append(i)
                 if carro.imagem_url:
                     st.image(carro.imagem_url)
+
+            if indices_para_remover:
+                if st.button("Remover carros selecionados"):
+                    loja.remover_carros(indices_para_remover)
+                    st.success("Carros removidos com sucesso.")
+                    st.experimental_rerun()
 
     elif escolha == "Buscar carros por modelo":
         st.subheader("Buscar carros por modelo")
@@ -88,12 +91,24 @@ def main():
                     if carro.imagem_url:
                         st.image(carro.imagem_url)
 
-    elif escolha == "Remover um carro":
-        st.subheader("Remover um carro")
-        modelo = st.text_input("Digite o modelo do carro para remover")
-        if st.button("Remover"):
-            resultado = loja.remover_carro(modelo)
-            st.success(resultado)
+    elif escolha == "Remover carros":
+        st.subheader("Remover carros")
+        carros = loja.listar_carros()
+        if isinstance(carros, str):
+            st.text(carros)
+        else:
+            indices_para_remover = []
+            for i, carro in enumerate(carros):
+                if st.checkbox(f'{carro}', key=f'remover_{i}'):
+                    indices_para_remover.append(i)
+                if carro.imagem_url:
+                    st.image(carro.imagem_url)
+
+            if indices_para_remover:
+                if st.button("Remover carros selecionados"):
+                    loja.remover_carros(indices_para_remover)
+                    st.success("Carros removidos com sucesso.")
+                    st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
